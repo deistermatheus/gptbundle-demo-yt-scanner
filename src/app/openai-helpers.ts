@@ -1,4 +1,4 @@
-import { OpenAI } from 'openai';
+import { OpenAI } from "openai";
 
 export function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
   const dotProduct = vectorA.reduce((acc, val, i) => acc + val * vectorB[i], 0);
@@ -7,10 +7,13 @@ export function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
   return dotProduct / (magnitudeA * magnitudeB);
 }
 
-export async function getEmbedding(text: string, model = 'text-embedding-ada-002'): Promise<number[]> {
+export async function getEmbedding(
+  text: string,
+  model = "text-embedding-ada-002",
+): Promise<number[]> {
   const response = await new OpenAI().embeddings.create({
     model: model,
-    input: [text.replace(/\n/g, ' ')],
+    input: [text.replace(/\n/g, " ")],
   });
 
   return response.data[0].embedding;
@@ -21,15 +24,17 @@ interface PunctuateAndCapitalizeInput {
   rawText?: string;
 }
 
-export async function addPunctuationAndCapitalization(inputObject: PunctuateAndCapitalizeInput) {
+export async function addPunctuationAndCapitalization(
+  inputObject: PunctuateAndCapitalizeInput,
+) {
   const chatCompletion = await new OpenAI().chat.completions.create({
     messages: [
       {
-        role: 'user',
+        role: "user",
         content: `I need the following text to be corrected for capitalization and punctuation: \n\n ${inputObject.text}`,
       },
     ],
-    model: 'gpt-3.5-turbo',
+    model: "gpt-3.5-turbo",
   });
 
   inputObject.rawText = inputObject.text;

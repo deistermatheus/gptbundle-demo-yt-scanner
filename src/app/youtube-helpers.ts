@@ -1,10 +1,13 @@
-import { SearchResult, YoutubeCaption, GetSubtitlesRequest } from './types';
+import { SearchResult, YoutubeCaption, GetSubtitlesRequest } from "./types";
 
-import { getEmbedding } from './openai-helpers';
+import { getEmbedding } from "./openai-helpers";
 
-import { getSubtitles } from 'youtube-captions-scraper';
+import { getSubtitles } from "youtube-captions-scraper";
 
-export function mergeCaptions(mergedCaption: Partial<YoutubeCaption> = {}, caption: YoutubeCaption): YoutubeCaption {
+export function mergeCaptions(
+  mergedCaption: Partial<YoutubeCaption> = {},
+  caption: YoutubeCaption,
+): YoutubeCaption {
   if (!mergedCaption) {
     mergedCaption = caption;
   }
@@ -22,7 +25,7 @@ export function mergeCaptions(mergedCaption: Partial<YoutubeCaption> = {}, capti
   if (!mergedCaption.text) {
     mergedCaption.text = caption.text as string;
   } else {
-    mergedCaption.text = mergedCaption.text + ' ' + caption.text;
+    mergedCaption.text = mergedCaption.text + " " + caption.text;
   }
 
   return mergedCaption as YoutubeCaption;
@@ -55,9 +58,53 @@ export function chunkArray(array: any[], chunkSize = 1) {
   return chunks;
 }
 
-export async function downloadVideoCaptions(videoId: string | null, lang = 'en') {
+export async function downloadVideoCaptions(
+  videoId: string | null,
+  lang = "en",
+) {
   return await getSubtitles({
     videoID: videoId,
     lang,
   });
+}
+
+export function extractVideoId(videoUrl: string): string | null {
+  const youtubeDomains: string[] = [
+    "www.youtube.com",
+    "youtube.com",
+    "youtu.be",
+  ];
+
+  let parsedUrl: URL | null;
+
+  try {
+    parsedUrl = new URL(videoUrl);
+  } catch (e) {
+    return null;
+  }
+
+  if (!youtubeDomains.includes(parsedUrl.hostname)) {
+    return null;
+  }
+
+  if (parsedUrl.hostname === "youtu.be") {
+    return parsedUrl.pathname.replaceAll("/", "");
+  }
+
+  if (parsedUrl.pathname === "/watch") {
+    const videoId: string | null = parsedUrl.searchParams.get("v");
+    return videoId ? videoId : null;
+  } else if (
+    parsedUrl.pathname.startsWith("/embed/") ||
+    parsedUrl.pathname.startsWith("/v/")
+  ) {
+    const pathParts: string[] = parsedUrl.pathname.split("/");
+    const videoId: string | null =
+      pathParts[pathParts.length - 1] !== ""
+        ? pathParts[pathParts.length - 1]
+        : null;
+    return videoId;
+  }
+
+  return null;
 }
